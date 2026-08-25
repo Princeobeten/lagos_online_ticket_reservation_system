@@ -1,0 +1,32 @@
+{
+  "name": "lagos-otrs",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Online Ticket Reservation System for Lagos State Transport Company",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "db": "node scripts/dev-db.js",
+    "seed": "node scripts/seed.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "jose": "^6.1.0",
+    "mongoose": "^8.20.1",
+    "next": "16.3.1",
+    "qrcode": "^1.5.4",
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "dotenv": "^17.2.3",
+    "eslint": "^9",
+    "eslint-config-next": "16.3.1",
+    "mongodb-memory-server": "^11.2.0",
+    "tailwindcss": "^4"
+  }
+}
