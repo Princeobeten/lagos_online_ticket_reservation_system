@@ -6,6 +6,14 @@ Transport Company, covering bus (BRT/LAGBUS), ferry (LAGFERRY) and rail
 
 Built with **Next.js (App Router)** and **MongoDB via Mongoose**.
 
+**Live:** <https://lagos-otrs.vercel.app>
+
+| Page | Address | Sign in with |
+|------|---------|--------------|
+| Passenger site | <https://lagos-otrs.vercel.app> | `demo@example.com` / `password123` |
+| Boarding gate | <https://lagos-otrs.vercel.app/verify> | no sign-in needed |
+| Administration | <https://lagos-otrs.vercel.app/admin> | `admin@example.com` / `admin12345` |
+
 ## Scope
 
 The prototype implements the four objectives from Chapter One and nothing else —
@@ -16,7 +24,10 @@ no fleet maintenance, no GPS tracking, no admin analytics.
 | 1 | A user-friendly interface for searching routes and schedules | `components/SearchForm.js`, `lib/trips.js`, `app/trips/page.js` |
 | 2 | A secure seat-selection and reservation algorithm | `lib/reservation.js`, `components/SeatPicker.js`, `app/api/bookings/route.js` |
 | 3 | A local payment gateway (Paystack) for instant booking | `lib/paystack.js`, `lib/settle.js`, `app/api/payments/*` |
-| 4 | Unique QR-code tickets for validation at the boarding gate | `lib/ticket.js`, `app/tickets/[reference]/page.js`, `app/verify/[reference]/page.js` |
+| 4 | Unique QR-code tickets for validation at the boarding gate | `lib/ticket.js`, `app/(site)/tickets/[reference]/page.js`, `app/(site)/verify/[reference]/page.js` |
+
+Plus an **administration area** for the platform owner — `/admin` — to oversee
+takings, publish the timetable and monitor every booking.
 
 ## Getting started
 
@@ -68,8 +79,12 @@ Open <http://localhost:3000>. The seed creates about 300 trips over the next
 seven days and one account to sign in with:
 
 ```
-demo@example.com  /  password123
+Passenger     demo@example.com    password123
+Administrator admin@example.com   admin12345     ->  http://localhost:3000/admin
 ```
+
+Set `ADMIN_PASSWORD` in `.env.local` before seeding to choose a different
+administrator password.
 
 ## User guide
 
@@ -94,6 +109,20 @@ node docs/build-user-guide.mjs
 5. **Ticket** — a QR ticket is issued at `/tickets/<reference>`.
 6. **Board** — scan the QR with a phone camera, or open `/verify` and type the
    reference. Press *Admit passenger*. A second scan is refused.
+
+## The administration area
+
+`/admin` is separate from the passenger site and only opens for an account whose
+role is `admin`. A passenger who tries is turned away at the sign-in screen.
+
+| Screen | What the owner does there |
+|--------|---------------------------|
+| Overview | Revenue, seats sold, occupancy, 7-day trend, revenue by mode, busiest routes, live booking feed |
+| Trips & schedules | Publish a departure, change fares or times, withdraw a service |
+| Bookings | Filter and search every reservation; cancel one and release its seats |
+
+Two rules protect passengers who already hold tickets: a trip with paid bookings
+cannot be deleted, and a vehicle cannot be shrunk below a seat that has been sold.
 
 ## How the reservation algorithm works
 
@@ -131,12 +160,11 @@ They only become `paid` after the gateway confirms the money (`lib/settle.js`).
 
 ```
 app/
-  api/            REST endpoints (auth, trips, bookings, payments, tickets)
-  trips/          search results and the seat-selection page
-  tickets/        the passenger's bookings and the QR ticket
-  verify/         boarding-gate validation
-  payment/        gateway callback and the sandbox checkout
+  (site)/         the passenger-facing site (search, seats, tickets, gate check)
+  admin/          the platform owner's console, behind a role check
+  api/            REST endpoints (auth, trips, bookings, payments, tickets, admin)
 components/       client-side interactive pieces
+  admin/          dashboard tiles, charts and the trip form
 lib/
   reservation.js  the seat reservation algorithm
   settle.js       the single place a booking becomes a ticket

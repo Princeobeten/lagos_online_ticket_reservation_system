@@ -96,7 +96,7 @@ async function main() {
   await Promise.all([
     Trip.deleteMany({}),
     Booking.deleteMany({}),
-    User.deleteMany({ email: "demo@example.com" }),
+    User.deleteMany({ email: { $in: ["demo@example.com", "admin@example.com"] } }),
   ]);
 
   const trips = [];
@@ -117,8 +117,22 @@ async function main() {
     passwordHash: await bcrypt.hash("password123", 10),
   });
 
+  // The platform owner. Change this password before deploying anywhere real.
+  await User.create({
+    fullName: "Platform Administrator",
+    email: "admin@example.com",
+    phone: "08010000000",
+    passwordHash: await bcrypt.hash(
+      process.env.ADMIN_PASSWORD || "admin12345",
+      10
+    ),
+    role: "admin",
+  });
+
   console.log(`Seeded ${upcoming.length} trips across ${ROUTES.length} routes.`);
-  console.log("Demo login:  demo@example.com  /  password123");
+  console.log("Passenger login:  demo@example.com   /  password123");
+  console.log("Admin login:      admin@example.com  /  " +
+    (process.env.ADMIN_PASSWORD || "admin12345") + "   ->  /admin");
 
   await mongoose.disconnect();
 }
