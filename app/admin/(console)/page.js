@@ -1,6 +1,6 @@
 import Link from "next/link";
 import connectDB from "@/lib/db";
-import { getPlatformStats, last7Days } from "@/lib/stats";
+import { getPlatformStats, last7Days, OCCUPANCY_WINDOW_DAYS } from "@/lib/stats";
 import StatTile from "@/components/admin/StatTile";
 import BarRows from "@/components/admin/BarRows";
 import RevenueChart from "@/components/admin/RevenueChart";
@@ -50,7 +50,7 @@ export default async function AdminOverviewPage() {
         <StatTile
           label="Upcoming departures"
           value={stats.upcomingTrips.toLocaleString("en-NG")}
-          sub={`${stats.occupancy}% of seats sold`}
+          sub={`${stats.occupancy}% of seats sold in the next ${OCCUPANCY_WINDOW_DAYS} days`}
         />
       </section>
 

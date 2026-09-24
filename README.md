@@ -75,8 +75,10 @@ npm run seed
 npm run dev
 ```
 
-Open <http://localhost:3000>. The seed creates about 300 trips over the next
-seven days and one account to sign in with:
+Open <http://localhost:3000>. The seed publishes departures from the day you run
+it through to the end of December, plus a demo trading history (paid, pending
+and boarded bookings across several passengers) so the administrator's dashboard
+has something to show. Re-run it any time to move the timetable forward:
 
 ```
 Passenger     demo@example.com    password123

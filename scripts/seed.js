@@ -10,6 +10,7 @@ import bcrypt from "bcryptjs";
 import Trip from "../models/Trip.js";
 import User from "../models/User.js";
 import Booking from "../models/Booking.js";
+import crypto from "node:crypto";
 
 // Next.js reads .env.local automatically; a plain node script has to be told.
 dotenv.config({ path: ".env.local", quiet: true });
@@ -38,7 +39,19 @@ const LAYOUT = {
   rail: { rows: 12, columns: 5, vehicle: "TRAIN" },
 };
 
-const DAYS = 7;
+/**
+ * Departures are published from today through to the end of December, so the
+ * timetable does not run dry mid-term. Re-running the seed always moves the
+ * window forward to start from the day you run it.
+ */
+function daysThroughDecember() {
+  const now = new Date();
+  const endOfYear = new Date(now.getFullYear(), 11, 31, 23, 59, 59);
+  const days = Math.ceil((endOfYear - now) / (24 * 60 * 60 * 1000));
+  return Math.max(days, 7); // never seed less than a week
+}
+
+const DAYS = daysThroughDecember();
 
 function tripsForRoute(route, dayOffset) {
   const layout = LAYOUT[route.mode];
@@ -63,24 +76,108 @@ function tripsForRoute(route, dayOffset) {
       vehicleLabel: `${layout.vehicle}-${route.routeCode.slice(-2)}${index + 1}`,
       rows: layout.rows,
       columns: layout.columns,
-      // A few seats already sold, so the seat map does not look untouched.
-      seats: preSoldSeats(layout, dayOffset + index),
+      seats: [], // filled in by seedBookings, so every sold seat has a booking
     };
   });
 }
 
-function preSoldSeats(layout, salt) {
-  const count = (salt * 3) % 7; // 0-6 seats, varies per trip
-  const seats = [];
-  for (let i = 0; i < count; i++) {
-    const row = (salt + i * 3) % layout.rows;
-    const column = ((salt + i * 5) % layout.columns) + 1;
-    const number = `${String.fromCharCode(65 + row)}${column}`;
-    if (!seats.some((s) => s.number === number)) {
-      seats.push({ number, status: "paid", bookingRef: "SEED" });
-    }
+const DEMO_PASSENGERS = [
+  ["Adaeze Nwosu", "adaeze@example.com", "08031110001"],
+  ["Chinedu Obi", "chinedu@example.com", "08031110002"],
+  ["Fatima Bello", "fatima@example.com", "08031110003"],
+  ["Segun Adeyemi", "segun@example.com", "08031110004"],
+  ["Ngozi Eze", "ngozi@example.com", "08031110005"],
+];
+
+const REF_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+function reference() {
+  let out = "";
+  for (const b of crypto.randomBytes(6)) out += REF_ALPHABET[b % REF_ALPHABET.length];
+  return `LSTC-${out}`;
+}
+
+/**
+ * Gives the platform a believable trading history, so the administrator's
+ * dashboard has revenue, routes and a booking feed to show straight after a
+ * seed. Written directly rather than through the payment gateway, because a
+ * gateway cannot be driven from a script.
+ */
+async function seedBookings() {
+  const password = await bcrypt.hash("password123", 10);
+  const people = [];
+  for (const [fullName, email, phone] of DEMO_PASSENGERS) {
+    people.push(
+      await User.findOneAndUpdate(
+        { email },
+        { fullName, email, phone, passwordHash: password, role: "passenger" },
+        { upsert: true, new: true, setDefaultsOnInsert: true }
+      )
+    );
   }
-  return seats;
+
+  // Only the nearest departures: real passengers book close to travel, and it
+  // keeps the seat maps a demo is likely to open from looking untouched.
+  const trips = await Trip.find().sort({ departureAt: 1 }).limit(200);
+  const counts = { paid: 0, pending: 0, boarded: 0, passengers: people.length };
+
+  for (let i = 0; i < trips.length; i += 2) {
+    const trip = trips[i];
+    const person = people[i % people.length];
+    const seatCount = (i % 3) + 1;
+
+    // take the next free seats on this vehicle
+    const taken = new Set(trip.seats.map((s) => s.number));
+    const seats = [];
+    for (let row = 0; row < trip.rows && seats.length < seatCount; row++) {
+      for (let col = 1; col <= trip.columns && seats.length < seatCount; col++) {
+        const number = `${String.fromCharCode(65 + row)}${col}`;
+        if (!taken.has(number)) seats.push(number);
+      }
+    }
+    if (seats.length < seatCount) continue;
+
+    const ref = reference();
+    // one in five is left unpaid, and one in seven has already travelled
+    const unpaid = i % 15 === 12;
+    const boarded = !unpaid && i % 21 === 0;
+    const bookedAt = new Date(Date.now() - (i % 7) * 24 * 60 * 60 * 1000);
+
+    trip.seats.push(
+      ...seats.map((number) => ({
+        number,
+        status: unpaid ? "held" : "paid",
+        bookingRef: ref,
+        ...(unpaid ? { holdExpiresAt: new Date(Date.now() + 9 * 60 * 1000) } : {}),
+      }))
+    );
+    await trip.save();
+
+    await Booking.create({
+      reference: ref,
+      user: person._id,
+      trip: trip._id,
+      seats,
+      passengerName: person.fullName,
+      passengerPhone: person.phone,
+      passengerEmail: person.email,
+      amount: trip.fare * seats.length,
+      status: unpaid ? "pending" : "paid",
+      holdExpiresAt: new Date(Date.now() + 9 * 60 * 1000),
+      createdAt: bookedAt,
+      payment: unpaid
+        ? { provider: "paystack" }
+        : { provider: "paystack", reference: ref, channel: "card", paidAt: bookedAt },
+      ticket: unpaid
+        ? {}
+        : { issuedAt: bookedAt, ...(boarded ? { checkedInAt: new Date(), checkedInGate: "Gate 1" } : {}) },
+    });
+
+    if (unpaid) counts.pending++;
+    else counts.paid++;
+    if (boarded) counts.boarded++;
+  }
+
+  return counts;
 }
 
 async function main() {
@@ -129,7 +226,13 @@ async function main() {
     role: "admin",
   });
 
+  const activity = await seedBookings();
+
   console.log(`Seeded ${upcoming.length} trips across ${ROUTES.length} routes.`);
+  console.log(
+    `Seeded ${activity.paid} paid, ${activity.pending} pending and ` +
+      `${activity.boarded} boarded booking(s) for ${activity.passengers} passengers.`
+  );
   console.log("Passenger login:  demo@example.com   /  password123");
   console.log("Admin login:      admin@example.com  /  " +
     (process.env.ADMIN_PASSWORD || "admin12345") + "   ->  /admin");
