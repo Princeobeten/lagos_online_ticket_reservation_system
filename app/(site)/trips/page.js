@@ -37,9 +37,11 @@ export default async function TripsPage({ searchParams }) {
             const seatsLeft = trip.seatsLeft();
             return (
               <li key={trip._id} className="card p-4 sm:p-5">
+                {/* On a phone the details take a full line and the fare sits
+                    on a row of its own; from sm upwards it is all one row. */}
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2 text-xs text-muted">
+                  <div className="min-w-0 flex-1 basis-full sm:basis-0">
+                    <div className="flex flex-wrap items-center gap-x-2 text-xs text-muted">
                       <span>{MODE_ICON[trip.mode]}</span>
                       <span className="font-semibold text-brand-700">
                         {trip.operator}
@@ -47,10 +49,10 @@ export default async function TripsPage({ searchParams }) {
                       <span>·</span>
                       <span>{MODE_LABEL[trip.mode]}</span>
                       <span>·</span>
-                      <span>{trip.vehicleLabel}</span>
+                      <span className="whitespace-nowrap">{trip.vehicleLabel}</span>
                     </div>
 
-                    <h2 className="mt-1 truncate text-lg font-semibold">
+                    <h2 className="mt-1 text-lg font-semibold">
                       {trip.origin} → {trip.destination}
                     </h2>
 
@@ -63,7 +65,8 @@ export default async function TripsPage({ searchParams }) {
                     </p>
                   </div>
 
-                  <div className="text-right">
+                  <div className="flex flex-1 items-center justify-between gap-3 sm:flex-none sm:justify-end">
+                  <div className="sm:text-right">
                     <p className="text-xl font-bold">{naira(trip.fare)}</p>
                     <p
                       className={`text-xs ${
@@ -81,14 +84,15 @@ export default async function TripsPage({ searchParams }) {
                   </div>
 
                   {seatsLeft === 0 ? (
-                    <button className="btn-ghost" disabled>
+                    <button className="btn-ghost shrink-0" disabled>
                       Sold out
                     </button>
                   ) : (
-                    <Link href={`/trips/${trip._id}`} className="btn-primary">
+                    <Link href={`/trips/${trip._id}`} className="btn-primary shrink-0">
                       Select seats
                     </Link>
                   )}
+                  </div>
                 </div>
               </li>
             );

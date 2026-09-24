@@ -38,7 +38,9 @@ export default function AuthForm({ mode, next = "/tickets" }) {
       return;
     }
 
-    router.push(next);
+    // An administrator signing in on the passenger page is sent to their
+    // console rather than to a passenger tickets list they have no use for.
+    router.push(data.user.role === "admin" && next === "/tickets" ? "/admin" : next);
     router.refresh();
   }
 

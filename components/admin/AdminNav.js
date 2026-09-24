@@ -14,7 +14,8 @@ export default function AdminNav() {
 
   return (
     <nav className="border-b border-line bg-surface">
-      <div className="mx-auto flex max-w-6xl gap-1 px-4">
+      {/* Scrolls sideways on a phone rather than wrapping the tab labels. */}
+      <div className="mx-auto flex max-w-6xl gap-1 overflow-x-auto px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {LINKS.map((link) => {
           const active =
             link.href === "/admin"
@@ -24,7 +25,7 @@ export default function AdminNav() {
             <Link
               key={link.href}
               href={link.href}
-              className={`border-b-2 px-3 py-3 text-sm font-medium transition ${
+              className={`whitespace-nowrap border-b-2 px-3 py-3 text-sm font-medium transition ${
                 active
                   ? "border-brand-600 text-brand-700"
                   : "border-transparent text-muted hover:text-ink"
