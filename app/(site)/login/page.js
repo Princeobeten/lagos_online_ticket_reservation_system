@@ -1,9 +1,9 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
-import AuthForm from "@/components/AuthForm";
+import LoginForm from "@/components/LoginForm";
 
 export default async function LoginPage({ searchParams }) {
   const { next } = await searchParams;
   if (await getCurrentUser()) redirect(next || "/tickets");
-  return <AuthForm mode="login" next={next || "/tickets"} />;
+  return <LoginForm next={next || "/tickets"} />;
 }

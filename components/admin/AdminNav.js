@@ -7,6 +7,7 @@ const LINKS = [
   { href: "/admin", label: "Overview" },
   { href: "/admin/trips", label: "Trips & schedules" },
   { href: "/admin/bookings", label: "Bookings" },
+  { href: "/admin/messages", label: "Messages" },
 ];
 
 export default function AdminNav() {
@@ -28,7 +29,7 @@ export default function AdminNav() {
               className={`whitespace-nowrap border-b-2 px-3 py-3 text-sm font-medium transition ${
                 active
                   ? "border-brand-600 text-brand-700"
-                  : "border-transparent text-muted hover:text-ink"
+                  : "border-transparent text-muted hover:border-line hover:bg-brand-50 hover:text-brand-700"
               }`}
             >
               {link.label}

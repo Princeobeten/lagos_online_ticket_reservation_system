@@ -35,13 +35,13 @@ export default async function AdminConsoleLayout({ children }) {
           <div className="ml-auto flex items-center gap-3 text-sm">
             <Link
               href="/"
-              className="hidden whitespace-nowrap text-white/70 hover:text-white sm:inline"
+              className="nav-link-dark hidden whitespace-nowrap sm:inline"
             >
               View public site
             </Link>
-            <span className="hidden whitespace-nowrap text-white/70 md:inline">
+            <Link href="/account" className="nav-link-dark hidden whitespace-nowrap md:inline">
               {user.fullName}
-            </span>
+            </Link>
             <LogoutButton redirectTo="/admin/login" tone="dark" />
           </div>
         </div>

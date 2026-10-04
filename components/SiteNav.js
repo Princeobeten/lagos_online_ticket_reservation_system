@@ -16,6 +16,8 @@ export default function SiteNav({ user }) {
   const links = [
     { href: "/trips", label: "Find a trip" },
     ...(user ? [{ href: "/tickets", label: "My tickets" }] : []),
+    ...(user ? [{ href: "/account", label: "My account" }] : []),
+    { href: "/contact", label: "Contact us" },
     ...(user?.role === "admin" ? [{ href: "/admin", label: "Admin" }] : []),
   ];
 
@@ -24,7 +26,7 @@ export default function SiteNav({ user }) {
       <nav className="mx-auto flex max-w-5xl items-center gap-3 px-4 py-3">
         <Link
           href="/"
-          className="flex shrink-0 items-center gap-2 font-bold text-ink"
+          className="flex shrink-0 items-center gap-2 rounded-lg font-bold text-ink transition-opacity hover:opacity-80"
         >
           <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-brand-600 text-sm text-white">
             LS
@@ -38,7 +40,7 @@ export default function SiteNav({ user }) {
             <Link
               key={link.href}
               href={link.href}
-              className="whitespace-nowrap rounded-lg px-3 py-2 text-muted hover:text-ink"
+              className="nav-link whitespace-nowrap text-sm"
             >
               {link.label}
             </Link>
@@ -54,7 +56,7 @@ export default function SiteNav({ user }) {
             <>
               <Link
                 href="/login"
-                className="whitespace-nowrap rounded-lg px-3 py-2 text-muted hover:text-ink"
+                className="nav-link whitespace-nowrap text-sm"
               >
                 Sign in
               </Link>
@@ -72,7 +74,7 @@ export default function SiteNav({ user }) {
           aria-expanded={open}
           aria-controls="site-menu"
           aria-label={open ? "Close menu" : "Open menu"}
-          className="ml-auto grid h-10 w-10 shrink-0 place-items-center rounded-lg border border-line text-ink sm:hidden"
+          className="ml-auto grid h-10 w-10 shrink-0 place-items-center rounded-lg border border-line text-ink transition-colors hover:border-brand-600 hover:bg-brand-50 hover:text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600/40 sm:hidden"
         >
           <span className="relative block h-3.5 w-5" aria-hidden="true">
             <span
@@ -102,7 +104,7 @@ export default function SiteNav({ user }) {
                 key={link.href}
                 href={link.href}
                 onClick={close}
-                className="rounded-lg px-3 py-2.5 font-medium text-ink hover:bg-canvas"
+                className="nav-link text-base !text-ink hover:!text-brand-700"
               >
                 {link.label}
               </Link>

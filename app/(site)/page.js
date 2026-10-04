@@ -60,8 +60,25 @@ export default function HomePage() {
             Scan a passenger&apos;s QR code, or enter the booking reference by hand.
           </p>
         </div>
-        <Link href="/verify" className="btn-ghost">
-          Open ticket validation
+        <div className="flex flex-wrap gap-2">
+          <Link href="/verify/scan" className="btn-ghost">
+            Scan a QR code
+          </Link>
+          <Link href="/verify" className="btn-ghost">
+            Open ticket validation
+          </Link>
+        </div>
+      </section>
+
+      <section className="card flex flex-wrap items-center justify-between gap-4 p-5">
+        <div>
+          <h2 className="font-semibold">Need help with a booking?</h2>
+          <p className="text-sm text-muted">
+            Talk to customer care about a seat, a payment or a refund.
+          </p>
+        </div>
+        <Link href="/contact" className="btn-ghost">
+          Contact us
         </Link>
       </section>
     </div>
